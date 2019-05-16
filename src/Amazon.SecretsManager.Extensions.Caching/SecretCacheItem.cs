@@ -1,17 +1,4 @@
-﻿/*
- * Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance with
- * the License. A copy of the License is located at
- *
- * http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
- * CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions
- * and limitations under the License.
- */
-
-namespace Amazon.SecretsManager.Extensions.Caching
+﻿namespace Amazon.SecretsManager.Extensions.Caching
 {
     using System;
     using System.Collections.Generic;
@@ -27,10 +14,6 @@ namespace Amazon.SecretsManager.Extensions.Caching
         /// The cached secret value versions for this cached secret. 
         private readonly MemoryCache versions = new MemoryCache(new MemoryCacheOptions());
         private const ushort MAX_VERSIONS_CACHE_SIZE = 10;
-
-        /// The next scheduled refresh time for this item.  Once the item is accessed
-        /// after this time, the item will be synchronously refreshed.
-        private long nextRefreshTime = 0;
         
         public SecretCacheItem(String secretId, IAmazonSecretsManager client, SecretCacheConfiguration config)
             : base(secretId, client, config)
@@ -43,10 +26,7 @@ namespace Amazon.SecretsManager.Extensions.Caching
         /// </summary>
         protected override async Task<DescribeSecretResponse> ExecuteRefreshAsync()
         {
-            DescribeSecretResponse response = await client.DescribeSecretAsync(new DescribeSecretRequest { SecretId = secretId });
-            int ttl = Convert.ToInt32(config.CacheItemTTL);
-            nextRefreshTime = Environment.TickCount + SecretCacheObject<DescribeSecretRequest>.random.Value.Next(ttl / 2, ttl + 1);
-            return response;
+            return await client.DescribeSecretAsync(new DescribeSecretRequest { SecretId = secretId });
         }
 
         /// <summary>
